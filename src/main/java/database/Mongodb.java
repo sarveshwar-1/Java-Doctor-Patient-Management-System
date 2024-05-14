@@ -1,11 +1,10 @@
 package database;
+import org.bson.Document;
+
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import org.bson.Document;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
 
 public class Mongodb {
 	public MongoClient mongoClient;
@@ -18,12 +17,23 @@ public class Mongodb {
 	}
 
 	public MongoCursor getCursor(String Collection){
-		MongoDatabase db = this.mongoClient.getDatabase("javamongodb");
+		MongoDatabase db = this.mongoClient.getDatabase("mongodbjava");
 		MongoCollection<Document> collection = db.getCollection(Collection);
 		MongoCursor<Document> cursor = collection.find().iterator();
 		return cursor;
+	}
+	public MongoCursor getCursor(String Collection,String Name){
+		MongoDatabase db = this.mongoClient.getDatabase("mongodbjava");
+		MongoCollection<Document> collection = db.getCollection(Collection);
+		Document query =new Document("name",Name);
+		MongoCursor<Document> cursor = collection.find(query).iterator();
+		return cursor;
 
-
+	}
+	public MongoCollection getCollection(String Collection){
+		MongoDatabase db = this.mongoClient.getDatabase("mongodbjava");
+		MongoCollection<Document> collection = db.getCollection(Collection);
+		return collection;
 	}
 	// }
 	// public void AddDoctor( Doctor doctor){

@@ -16,7 +16,9 @@ public class DPM {
         System.out.println("hello");
         Hospital hospital = new Hospital("Apollo","Chennai","1234567890","apollo@gmail.com");
         Doctor doctor = new Doctor("Dr. Raj","raj@gmail.com","1234567890","1234567890","Chennai","12/12/1990",hospital,"Cardiologist");
+        doctor.AddDoctor();
         Patient patient  = new Patient("Rahul","rahul@gmail.com","1234567890","1234567890","Chennai","12/12/1990","A+",180,70);
+        patient.AddPatient();
         // ArrayList<Doctor> doctors = new ArrayList<>();
         Session session = new Session(doctor,patient);
 
@@ -88,33 +90,35 @@ class Patient extends User{
         super(name,email,password,phone,address,DOB);
         this.bloodGroup=bloodGroup;
         this.height=height;
+        this.weight = weight;
     }
 
-    void addPatient(){
+    void AddPatient(){
         MongoClient mc = new Mongodb().getMongoClient();
 		MongoDatabase db = mc.getDatabase("mongodbjava");
 		MongoCollection<org.bson.Document> collection = db.getCollection("patients");
 		org.bson.Document doc = new org.bson.Document();
         String hashPass = hashString(this.password, "sha256");
-        doc.append("name.", this.name);
+        doc.append("name", this.name);
         doc.append("email", this.email);
         doc.append("password", hashPass);
         doc.append("phone", this.phone);
         doc.append("address", this.address);
         doc.append("DOB", this.DOB);
+        doc.append("bloodgroup",this.bloodGroup);
+        doc.append("height",this.height);
+        doc.append("weight",this.weight);
         collection.insertOne(doc);
         // add patient to the database
     }
 
-    public void viewPatient(String username,String password){
-        MongoClient mc = new Mongodb().getMongoClient();
-        MongoDatabase db = mc.getDatabase("mongodbjava");
-        MongoCollection<org.bson.Document> collection = db.getCollection("patients");
-        String hashPass = hashString(password, "sha256");
-        collection.findOne(username);
+    // public void viewPatient(String username,String password){
+        
+    //     String hashPass = hashString(password, "sha256");
+    //     collection.findOne(username);
 
-        // view patient details
-    }
+    //     // view patient details
+    // }
 
 }
 
@@ -164,7 +168,7 @@ class Doctor extends User{
 		MongoCollection<org.bson.Document> collection = db.getCollection("doctors");
 		org.bson.Document doc = new org.bson.Document();
         String hashPass = hashString(this.password, "sha256");
-        doc.append("name.", this.name);
+        doc.append("name", this.name);
         doc.append("email", this.email);
         doc.append("password", hashPass);
         doc.append("phone", this.phone);

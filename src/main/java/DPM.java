@@ -4,6 +4,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.bson.Document;
 
@@ -38,8 +39,11 @@ public class DPM {
         Session session = new Session(doctor1,patient1);
 
         Prescription prescription = new Prescription();
-
+        Medicine medicine = new Medicine("Crocin", 2.0, 1.5);
+        prescription.addMedicine(medicine);
         session.addPrescription(prescription);
+        doctor1.CreateSession(doctor1, patient1);
+
 
     }
 }
@@ -118,8 +122,10 @@ class Patient extends User{
             System.out.println("Blood Group: " + doc.getString("bloodgroup"));
             System.out.println("Height: " + doc.getInteger("height"));
             System.out.println("Weight: " + doc.getInteger("weight"));
+            mongocursor.close();
         } else {
             System.out.println("Patient not found.");
+            mongocursor.close();
         }
 
 
@@ -140,9 +146,9 @@ class Patient extends User{
 
 class Medicine{
     public String name;
-    public float dosage;
-    public float frequency;
-    Medicine(String name,float dosage,float frequency){
+    public double dosage;
+    public double frequency;
+    Medicine(String name,double dosage,double frequency){
         this.name=name;
         this.dosage=dosage;
         this.frequency=frequency;
@@ -163,13 +169,13 @@ class Prescription{
 class Session {
     public Doctor doctor;
     public Patient patient;
-    public TimeStamp timestamp;
+    public String timestamp;
     public Prescription prescription;
 
     Session(Doctor doctor, Patient patient){
         this.doctor=doctor;
         this.patient=patient;
-        this.timestamp=new TimeStamp();
+        this.timestamp=new TimeStamp().getDateTime();
     }
 
     void addPrescription(Prescription prescription){
@@ -204,6 +210,7 @@ class Doctor extends User{
         doc.append("specialization",this.specialization);
         doc.append("patients", this.patients);
         collection.insertOne(doc);
+        mc.close();
 	}
     protected void AddPatient(Patient patient){
         Mongodb db = new Mongodb();
@@ -224,14 +231,41 @@ class Doctor extends User{
         Document doc1 = mc.next();
         String id = doc1.getString("_id");
         patients.add(id);
+        mc.close();
         // add patient to the database
     }
-    protected void CreateSession(Doctor doctor, Patient patient){
-        Session session = new Session(doctor, patient);
-        Prescription prescription = new Prescription();
-        session.addPrescription(prescription);;
+    protected void CreateSession(Doctor doctor, Patient patient) {
+    Session session = new Session(doctor, patient);
+    Medicine med = new Medicine("Crocin", 1.2, 3.4);
+    Prescription prescription = new Prescription();
+    prescription.addMedicine(med);
+    session.addPrescription(prescription);
 
+    Mongodb db = new Mongodb();
+    MongoCollection<Document> collection = db.getCollection("sessions");
+    Document doc = new Document();
+
+    doc.append("doctor_name", doctor.getName())
+       .append("patient_name", patient.getName())
+       .append("timestamp", session.timestamp);
+
+    ArrayList<Document> prescriptionDocs = new ArrayList<>();
+    for (Medicine medicine : prescription.medicines) {
+        Document medicineDoc = new Document();
+        medicineDoc.append("name", medicine.name)
+                   .append("dosage", medicine.dosage)
+                   .append("frequency", medicine.frequency);
+        prescriptionDocs.add(medicineDoc);
     }
+    doc.append("prescription", prescriptionDocs);
+
+    try {
+        collection.insertOne(doc);
+        System.out.println("Session created and stored in the database.");
+    } catch (Exception e) {
+        System.err.println("Error creating session: " + e.getMessage());
+    }
+}
 
 }
 
@@ -254,6 +288,9 @@ class TimeStamp{
     }
     String getDate(){
         return day+"/"+month+"/"+year;
+    }
+    String getDateTime(){
+        return getDate()+" "+getTime();
     }
 }
 class Report {
@@ -381,3 +418,4 @@ class OpticalReport extends Report {
 
 
 // Assuming Hospital, Patient, and Doctor classes are already defined
+

@@ -10,7 +10,6 @@ public class Mongodb {
 	public MongoClient mongoClient;
 	public Mongodb(){
 		this.mongoClient = new MongoClient("localhost", 27017);
-		System.out.println("DB connected");
 	}
 	public MongoClient getMongoClient() {
 		return this.mongoClient;

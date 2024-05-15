@@ -180,13 +180,13 @@ class Session {
 class Doctor extends User{
     public Hospital hospital;
     public String specialization;
-    protected ArrayList <Patient> patients;
+    protected ArrayList <String> patients;
 
     Doctor(String name,String email, String password,String phone, String address,String DOB,Hospital hospital,String specialization){
         super(name,email,password,phone,address,DOB);
         this.hospital=hospital;
         this.specialization=specialization;
-        this.patients=new ArrayList<Patient>();
+        this.patients=new ArrayList<String>();
     }
     public void AddDoctor(){
         MongoClient mc = new Mongodb().getMongoClient();
@@ -206,9 +206,8 @@ class Doctor extends User{
         collection.insertOne(doc);
 	}
     protected void AddPatient(Patient patient){
-        MongoClient mc = new Mongodb().getMongoClient();
-		MongoDatabase db = mc.getDatabase("mongodbjava");
-		MongoCollection<org.bson.Document> collection = db.getCollection("patients");
+        Mongodb db = new Mongodb();
+        MongoCollection<Document> collection = db.getCollection("patients");
 		org.bson.Document doc = new org.bson.Document();
         String hashPass = hashString(patient.password, "sha256");
         doc.append("name", patient.name);
@@ -221,9 +220,18 @@ class Doctor extends User{
         doc.append("height",patient.height);
         doc.append("weight",patient.weight);
         collection.insertOne(doc);
+        MongoCursor<Document> mc = db.getLastCursor();
+        Document doc1 = mc.next();
+        String id = doc1.getString("_id");
+        patients.add(id);
         // add patient to the database
     }
-    public void 
+    protected void CreateSession(Doctor doctor, Patient patient){
+        Session session = new Session(doctor, patient);
+        Prescription prescription = new Prescription();
+        session.addPrescription(prescription);;
+
+    }
 
 }
 

@@ -16,24 +16,38 @@ public class Mongodb {
 		return this.mongoClient;
 	}
 
-	public MongoCursor getCursor(String Collection){
+	public MongoCursor<Document> getCursor(String Collection){
 		MongoDatabase db = this.mongoClient.getDatabase("mongodbjava");
 		MongoCollection<Document> collection = db.getCollection(Collection);
 		MongoCursor<Document> cursor = collection.find().iterator();
 		return cursor;
 	}
-	public MongoCursor getCursor(String Collection,String Name){
+	public MongoCursor<Document> getCursor(String Collection,String Name){
 		MongoDatabase db = this.mongoClient.getDatabase("mongodbjava");
 		MongoCollection<Document> collection = db.getCollection(Collection);
 		Document query =new Document("name",Name);
 		MongoCursor<Document> cursor = collection.find(query).iterator();
+		return cursor;}
+	
+	public MongoCursor<Document> getCursorbyID(String Collection,String id){
+		MongoDatabase db = this.mongoClient.getDatabase("mongodbjava");
+		MongoCollection<Document> collection = db.getCollection(Collection);
+		Document query =new Document("_id",id);
+		MongoCursor<Document> cursor = collection.find(query).iterator();
 		return cursor;
-
 	}
-	public MongoCollection getCollection(String Collection){
+	public MongoCollection<Document> getCollection(String Collection){
 		MongoDatabase db = this.mongoClient.getDatabase("mongodbjava");
 		MongoCollection<Document> collection = db.getCollection(Collection);
 		return collection;
+	}
+	public MongoCursor<Document> getLastCursor(){
+		MongoClient mc = new Mongodb().getMongoClient();
+        MongoDatabase db = mc.getDatabase("mongodbjava");
+        MongoCollection<Document> collection = db.getCollection("patients");
+        MongoCursor<Document> cursor = collection.find().sort(new Document("_id", -1)).iterator();
+		return cursor;
+
 	}
 	// }
 	// public void AddDoctor( Doctor doctor){

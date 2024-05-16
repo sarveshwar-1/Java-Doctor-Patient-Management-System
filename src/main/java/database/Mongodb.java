@@ -33,6 +33,7 @@ public class Mongodb {
 		MongoCollection<Document> collection = db.getCollection(Collection);
 		Document query =new Document("_id",id);
 		MongoCursor<Document> cursor = collection.find(query).iterator();
+		System.out.println("hello");
 		return cursor;
 	}
 	public MongoCollection<Document> getCollection(String Collection){

@@ -163,6 +163,7 @@ class Prescription{
     void addMedicine(Medicine medicine){
         this.medicines.add(medicine);
     }
+
 }
 
 
@@ -262,6 +263,7 @@ class Doctor extends User{
     try {
         collection.insertOne(doc);
         System.out.println("Session created and stored in the database.");
+
     } catch (Exception e) {
         System.err.println("Error creating session: " + e.getMessage());
     }
@@ -334,6 +336,7 @@ class BloodTest extends Report {
     }
 
     void display() {
+        
         // Implement display logic for BloodTest report
     }
 }

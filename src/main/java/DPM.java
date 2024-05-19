@@ -17,32 +17,32 @@ import database.Mongodb;
 
 public class DPM {
     public static void main(String[] args) {
-        System.out.println("hello");
+        // System.out.println("hello");
 
-        Hospital hospital1 = new Hospital("Apollo", "Chennai", "1234567890", "apollo@gmail.com");
-        Hospital hospital2 = new Hospital("Max Healthcare", "Delhi", "9876543210", "maxhealthcare@example.com");
-        Hospital hospital3 = new Hospital("Fortis", "Mumbai", "5555555555", "fortis@example.com");
+        // Hospital hospital1 = new Hospital("Apollo", "Chennai", "1234567890", "apollo@gmail.com");
+        // Hospital hospital2 = new Hospital("Max Healthcare", "Delhi", "9876543210", "maxhealthcare@example.com");
+        // Hospital hospital3 = new Hospital("Fortis", "Mumbai", "5555555555", "fortis@example.com");
 
-        // Create doctors
-        Doctor doctor1 = new Doctor("Dr. Raj", "raj@gmail.com", "1234567890", "1234567890", "Chennai", "12/12/1990", hospital1, "Cardiologist");
-        Doctor doctor2 = new Doctor("Dr. Priya", "priya@example.com", "9876543210", "9876543210", "Delhi", "05/03/1985", hospital2, "Pediatrician");
-        Doctor doctor3 = new Doctor("Dr. Amit", "amit@example.com", "5555555555", "5555555555", "Mumbai", "20/08/1992", hospital3, "Orthopedic Surgeon");
+        // // Create doctors
+        // Doctor doctor1 = new Doctor("Dr. Raj", "raj@gmail.com", "1234567890", "1234567890", "Chennai", "12/12/1990", hospital1, "Cardiologist");
+        // Doctor doctor2 = new Doctor("Dr. Priya", "priya@example.com", "9876543210", "9876543210", "Delhi", "05/03/1985", hospital2, "Pediatrician");
+        // Doctor doctor3 = new Doctor("Dr. Amit", "amit@example.com", "5555555555", "5555555555", "Mumbai", "20/08/1992", hospital3, "Orthopedic Surgeon");
 
-        // Create patients
-        Patient patient1 = new Patient("Rahul", "rahul@gmail.com", "1234567890", "1234567890", "Chennai", "12/12/1990", "A+", 180, 70);
-        Patient patient2 = new Patient("Neha", "neha@example.com", "9876543210", "9876543210", "Delhi", "25/06/1995", "O-", 165, 55);
-        Patient patient3 = new Patient("Sameer", "sameer@example.com", "5555555555", "5555555555", "Mumbai", "10/11/1988", "B+", 175, 80);      
-        // doctor2.AddDoctor();
-        // patient2.AddPatient();
-        patient2.viewPatient();
-        // ArrayList<Doctor> doctors = new ArrayList<>();
-        Session session = new Session(doctor1,patient1);
+        // // Create patients
+        // Patient patient1 = new Patient("Rahul", "rahul@gmail.com", "1234567890", "1234567890", "Chennai", "12/12/1990", "A+", 180, 70);
+        // Patient patient2 = new Patient("Neha", "neha@example.com", "9876543210", "9876543210", "Delhi", "25/06/1995", "O-", 165, 55);
+        // Patient patient3 = new Patient("Sameer", "sameer@example.com", "5555555555", "5555555555", "Mumbai", "10/11/1988", "B+", 175, 80);      
+        // // doctor2.AddDoctor();
+        // // patient2.AddPatient();
+        // patient2.viewPatient();
+        // // ArrayList<Doctor> doctors = new ArrayList<>();
+        // Session session = new Session(doctor1,patient1);
 
-        Prescription prescription = new Prescription();
-        Medicine medicine = new Medicine("Crocin", 2.0, 1.5);
-        prescription.addMedicine(medicine);
-        session.addPrescription(prescription);
-        doctor1.CreateSession(doctor1, patient1);
+        // Prescription prescription = new Prescription();
+        // Medicine medicine = new Medicine("Crocin", 2.0, 1.5);
+        // prescription.addMedicine(medicine);
+        // session.addPrescription(prescription);
+        // doctor1.CreateSession(doctor1, patient1);
 
 
     }

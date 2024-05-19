@@ -398,6 +398,7 @@ class DentalReport extends Report {
 
     void display() {
         // Implement display logic for DentalReport
+        
     }
 }
 

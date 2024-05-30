@@ -1,274 +1,318 @@
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-
+import java.util.Scanner;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import com.mongodb.MongoClient;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 
-import database.Mongodb;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class DPM {
-    public static void main(String[] args) {
-        // System.out.println("hello");
-
-        // Hospital hospital1 = new Hospital("Apollo", "Chennai", "1234567890", "apollo@gmail.com");
-        // Hospital hospital2 = new Hospital("Max Healthcare", "Delhi", "9876543210", "maxhealthcare@example.com");
-        // Hospital hospital3 = new Hospital("Fortis", "Mumbai", "5555555555", "fortis@example.com");
-
-        // // Create doctors
-        // Doctor doctor1 = new Doctor("Dr. Raj", "raj@gmail.com", "1234567890", "1234567890", "Chennai", "12/12/1990", hospital1, "Cardiologist");
-        // Doctor doctor2 = new Doctor("Dr. Priya", "priya@example.com", "9876543210", "9876543210", "Delhi", "05/03/1985", hospital2, "Pediatrician");
-        // Doctor doctor3 = new Doctor("Dr. Amit", "amit@example.com", "5555555555", "5555555555", "Mumbai", "20/08/1992", hospital3, "Orthopedic Surgeon");
-
-        // // Create patients
-        // Patient patient1 = new Patient("Rahul", "rahul@gmail.com", "1234567890", "1234567890", "Chennai", "12/12/1990", "A+", 180, 70);
-        // Patient patient2 = new Patient("Neha", "neha@example.com", "9876543210", "9876543210", "Delhi", "25/06/1995", "O-", 165, 55);
-        // Patient patient3 = new Patient("Sameer", "sameer@example.com", "5555555555", "5555555555", "Mumbai", "10/11/1988", "B+", 175, 80);      
-        // // doctor2.AddDoctor();
-        // // patient2.AddPatient();
-        // patient2.viewPatient();
-        // // ArrayList<Doctor> doctors = new ArrayList<>();
-        // Session session = new Session(doctor1,patient1);
-
-        // Prescription prescription = new Prescription();
-        // Medicine medicine = new Medicine("Crocin", 2.0, 1.5);
-        // prescription.addMedicine(medicine);
-        // session.addPrescription(prescription);
-        // doctor1.CreateSession(doctor1, patient1);
-
-
-    }
-}
-class User{
-    protected String name;
-    protected String email;
-    protected String password;
-    protected String phone;
-    protected String address;
-    protected String DOB;
-    User(String name,String email, String password,String phone, String address,String DOB){
-        this.name=name;
-        this.email=email;
-        this.password=password;
-        this.phone=phone;
-        this.address=address;
-        this.DOB=DOB;
-        }
-    public String getName() {
-        return name;
-    }
-    public String getEmail(){
-        return email;
-    }
-    public String hashString(String input, String algorithm) {
-        try {
-            MessageDigest md = MessageDigest.getInstance(algorithm);
-            byte[] hashBytes = md.digest(input.getBytes());
-
-            // Convert byte array to hexadecimal string representation
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hashBytes) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return null;
-        }
+class Choice{
+    int choice;
+    String user;
+    Choice(int choice, String user){
+        this.choice = choice;
+        this.user = user;
     }
 
 }
-class Hospital{
-    public String name;
-    public String address;
-    public String phone;
-    public String email;
-
-    Hospital(String name, String address,String phone, String email){
-        this.name=name;
-        this.address=address;
-        this.phone=phone;
-        this.email = email;
-    }
-}
-class Patient extends User{
-    protected String bloodGroup;
-    protected int height;
-    protected int weight;
-
-    Patient (String name,String email, String password,String phone, String address,String DOB, String bloodGroup,int height, int weight){
-        super(name,email,password,phone,address,DOB);
-        this.bloodGroup=bloodGroup;
-        this.height=height;
-        this.weight = weight;
-    }
-    void viewPatient(){
-        MongoCursor mongocursor = new Mongodb().getCursor("patients",this.name);
-        if(mongocursor.hasNext()){
-            Document doc = (Document) mongocursor.next();
-            System.out.println("Name: " + doc.getString("name"));
-            System.out.println("Email: " + doc.getString("email"));
-            System.out.println("Phone: " + doc.getString("phone"));
-            System.out.println("Address: " + doc.getString("address"));
-            System.out.println("DOB: " + doc.getString("DOB"));
-            System.out.println("Blood Group: " + doc.getString("bloodgroup"));
-            System.out.println("Height: " + doc.getInteger("height"));
-            System.out.println("Weight: " + doc.getInteger("weight"));
-            mongocursor.close();
-        } else {
-            System.out.println("Patient not found.");
-            mongocursor.close();
+    public class DPM {
+        private static final Logger MONGO_LOGGER = Logger.getLogger("org.mongodb.driver");
+        static {
+            MONGO_LOGGER.setLevel(Level.SEVERE); // or Level.WARNING, etc.
         }
 
+        public static Scanner scanner = new Scanner(System.in);
 
-
-
-    }
-
-
-    // public void viewPatient(String username,String password){
         
-    //     String hashPass = hashString(password, "sha256");
-    //     collection.findOne(username);
-
-    //     // view patient details
-    // }
-
-}
-
-class Medicine{
-    public String name;
-    public double dosage;
-    public double frequency;
-    Medicine(String name,double dosage,double frequency){
-        this.name=name;
-        this.dosage=dosage;
-        this.frequency=frequency;
+        
+        public static void main(String[] args) {
+            ensureAdminExists(); 
+            Choice ch = Login();
+            
+            if (ch.choice != 0) {
+                Activities(ch);
+            }
+        }
+    
+        public static String hashPassword(String password) {
+            try {
+                MessageDigest md = MessageDigest.getInstance("SHA-256");
+                md.update(password.getBytes());
+                byte[] digest = md.digest();
+                StringBuilder sb = new StringBuilder();
+                for (byte b : digest) {
+                    sb.append(String.format("%02x", b));
+                }
+                return sb.toString();
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+                return null;
+            }
     }
 
-}
-class Prescription{
-    protected ArrayList<Medicine> medicines;
-    Prescription(){
-        this.medicines=new ArrayList<Medicine>();
-    }
-    void addMedicine(Medicine medicine){
-        this.medicines.add(medicine);
-    }
-
-}
-
-
-class Session {
-    public Doctor doctor;
-    public Patient patient;
-    public String timestamp;
-    public Prescription prescription;
-
-    Session(Doctor doctor, Patient patient){
-        this.doctor=doctor;
-        this.patient=patient;
-        this.timestamp=new TimeStamp().getDateTime();
+    static void ensureAdminExists() {
+        try (MongoClient mongoClient = new MongoClient("localhost", 27017)) {
+            MongoDatabase database = mongoClient.getDatabase("mongodbjava");
+            MongoCollection<Document> adminsCollection = database.getCollection("admins");
+            
+            long adminCount = adminsCollection.countDocuments();
+            
+            if (adminCount == 0) {
+                System.out.println("No admin found. Creating an admin account.");
+                createAdmin();
+            }
+        }
     }
 
-    void addPrescription(Prescription prescription){
-        this.prescription=prescription;
+    static void createAdmin() {
+        
+        System.out.println("Enter admin details:");
+        System.out.print("Name: ");
+        String name = scanner.nextLine();
+        System.out.print("Email: ");
+        String email = scanner.nextLine();
+        System.out.print("Password: ");
+        String password = scanner.nextLine();
+        password = DPM.hashPassword(password);
+        System.out.print("Phone: ");
+        String phone = scanner.nextLine();
+        System.out.print("Address: ");
+        String address = scanner.nextLine();
+        System.out.print("DOB (dd/MM/yyyy): ");
+        String dob = scanner.nextLine();
+
+        Admin admin = new Admin(name, email, password, phone, address, dob);
+        admin.AddAdmin();
+        System.out.println("Admin created successfully.");
     }
 
-}
-class Doctor extends User{
-    public Hospital hospital;
-    public String specialization;
-    protected ArrayList <String> patients;
-
-    Doctor(String name,String email, String password,String phone, String address,String DOB,Hospital hospital,String specialization){
-        super(name,email,password,phone,address,DOB);
-        this.hospital=hospital;
-        this.specialization=specialization;
-        this.patients=new ArrayList<String>();
+    static void Activities(Choice ch) {
+        int User_ch = ch.choice;
+        String user = ch.user;
+        if (User_ch == 1) { // Doctor
+            while (true) {
+                Doctor doctor = Doctor.getDoctorByEmail(user);
+                System.out.println("1. Add patient");
+                System.out.println("2. Create a session for diagnosis");
+                System.out.println("3. View patient");
+                System.out.println("4. Add report");
+                System.out.println("5. Exit");
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+                switch (choice) {
+                    case 1:
+                        System.out.println("Enter patient details:");
+                        System.out.print("Name: ");
+                        String name = scanner.nextLine();
+                        System.out.print("Email: ");
+                        String email = scanner.nextLine();
+                        System.out.print("Password: ");
+                        String password = scanner.nextLine();
+                        password = hashPassword(password);
+                        System.out.print("Phone: ");
+                        String phone = scanner.nextLine();
+                        System.out.print("Address: ");
+                        String address = scanner.nextLine();
+                        System.out.print("DOB (dd/MM/yyyy): ");
+                        String dob = scanner.nextLine();
+                        System.out.print("Blood Group: ");
+                        String bloodGroup = scanner.nextLine();
+                        System.out.print("Height: ");
+                        int height = scanner.nextInt();
+                        System.out.print("Weight: ");
+                        int weight = scanner.nextInt();
+                        Patient patient = new Patient(name, email, password, phone, address, dob, bloodGroup, height, weight);
+                        doctor.AddPatient(patient);
+                        
+                        System.out.println("Patient added successfully.");
+                        break;
+                    case 2:
+                        // Create session functionality
+                        System.out.println("Enter patient name for diagnosis session:");
+                        String patientName = scanner.nextLine();
+                        // Fetch the patient from the database using patientName
+                        Patient sessionPatient = Patient.getPatientByName(patientName); 
+                        Doctor.CreateSession(doctor,sessionPatient);
+                        System.out.println("Session created successfully.");
+                        break;
+                    case 3:
+                        System.out.println("Enter patient name to view details:");
+                        String viewPatientName = scanner.nextLine();
+                        Patient viewPatient = Patient.getPatientByName(viewPatientName); 
+                        viewPatient.viewPatient();
+                        break;
+                    case 4:
+                        System.out.println("Enter patient name for report:");
+                        String patientNameReport = scanner.nextLine();
+                        Patient reportPatient = Patient.getPatientByName(patientNameReport); 
+                        doctor.AddReports(reportPatient);
+                    case 5:
+                        // Exit
+                        return;
+                    default:
+                        System.out.println("Invalid choice. Try again.");
+                }
+            }
+        } else if (User_ch == 2) { // Patient
+            while (true) {
+                System.out.println("1. View doctors");
+                System.out.println("2. View reports for each session");
+                System.out.println("3. Exit");
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+                switch (choice) {
+                    case 1:
+                        // View doctors functionality
+                        System.out.println("Doctors list:");
+                        viewDoctors();
+                        
+                        break;
+                    case 2:
+                        // View reports functionality
+                        System.out.println("Enter your name to view reports:");
+                        String patientName = scanner.nextLine();
+                        viewReports(patientName);
+                        // Fetch and display reports from the database
+                        break;
+                    case 3:
+                        // Exit
+                        return;
+                    default:
+                        System.out.println("Invalid choice. Try again.");
+                }
+            }
+        } else if (User_ch == 3) { 
+            while (true) {
+                System.out.println("1. Add doctor");
+                System.out.println("2. Add hospital");
+                System.out.println("3. View doctors");
+                System.out.println("4. Exit");
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+                  
+                switch (choice) {
+                    case 1:
+                        System.out.println("Enter doctor details:");
+                        System.out.println("Name: ");
+                        String name = scanner.nextLine();
+                        System.out.print("Email: ");
+                        String email = scanner.nextLine();
+                        System.out.print("Password: ");
+                        String password = scanner.nextLine();
+                        password = DPM.hashPassword(password);
+                        System.out.print("Phone: ");
+                        String phone = scanner.nextLine();
+                        System.out.print("Address: ");
+                        String address = scanner.nextLine();
+                        System.out.print("DOB (dd/MM/yyyy): ");
+                        String dob = scanner.nextLine();
+                        System.out.print("Hospital Name: ");
+                        String hospitalname = scanner.nextLine();
+                        System.out.print("Specialization: ");
+                        String specialization = scanner.nextLine();
+                        Hospital hospital = Hospital.getHospitalByName(hospitalname); 
+                        Doctor doctor = new Doctor(name, email, password, phone, address, dob, hospital, specialization);
+                        doctor.AddDoctor();
+                        System.out.println("Doctor added successfully.");
+                        break;
+                    case 2:
+                        System.out.println("Enter hospital details:");
+                        System.out.print("Name: ");
+                        String hospitalName = scanner.nextLine();
+                        System.out.print("Address: ");
+                        String hospitalAddress = scanner.nextLine();
+                        Hospital HOSPITAL = new Hospital(hospitalName, hospitalAddress);
+                        HOSPITAL.AddHospital();
+                        System.out.println("Hospital added successfully.");
+                    case 3:
+                        System.out.println("Doctors list:");
+                        viewDoctors();
+                        break;
+                    case 4:
+                        return;
+                    default:
+                        System.out.println("Invalid choice. Try again.");
+                }
+            }
+        }
     }
-    public void AddDoctor(){
-        MongoClient mc = new Mongodb().getMongoClient();
-		MongoDatabase db = mc.getDatabase("mongodbjava");
-		MongoCollection<org.bson.Document> collection = db.getCollection("doctors");
-		org.bson.Document doc = new org.bson.Document();
-        String hashPass = hashString(this.password, "sha256");
-        doc.append("name", this.name);
-        doc.append("email", this.email);
-        doc.append("password", hashPass);
-        doc.append("phone", this.phone);
-        doc.append("address", this.address);
-        doc.append("DOB", this.DOB);
-        doc.append("hospital", this.hospital.name);
-        doc.append("specialization",this.specialization);
-        doc.append("patients", this.patients);
-        collection.insertOne(doc);
-        mc.close();
-	}
-    protected void AddPatient(Patient patient){
-        Mongodb db = new Mongodb();
-        MongoCollection<Document> collection = db.getCollection("patients");
-		org.bson.Document doc = new org.bson.Document();
-        String hashPass = hashString(patient.password, "sha256");
-        doc.append("name", patient.name);
-        doc.append("email", patient.email);
-        doc.append("password", hashPass);
-        doc.append("phone", patient.phone);
-        doc.append("address", patient.address);
-        doc.append("DOB", patient.DOB);
-        doc.append("bloodgroup",patient.bloodGroup);
-        doc.append("height",patient.height);
-        doc.append("weight",patient.weight);
-        collection.insertOne(doc);
-        MongoCursor<Document> mc = db.getLastCursor();
-        Document doc1 = mc.next();
-        String id = doc1.getString("_id");
-        patients.add(id);
-        mc.close();
-        // add patient to the database
+
+    static void viewDoctors() {
+        try (MongoClient mongoClient = new MongoClient("localhost", 27017)) {
+            MongoDatabase database = mongoClient.getDatabase("mongodbjava");
+            MongoCollection<Document> doctorsCollection = database.getCollection("doctors");
+            FindIterable<Document> doctors = doctorsCollection.find();
+            System.out.println("List of Doctors:");
+            for (Document doc : doctors) {
+                String name = doc.getString("name");
+                String email = doc.getString("email");
+                String specialization = doc.getString("specialization");
+                System.out.printf("Name: %s, Email: %s, Specialization: %s%n", name, email, specialization);
+            }
+        }
     }
-    protected void CreateSession(Doctor doctor, Patient patient) {
-    Session session = new Session(doctor, patient);
-    Medicine med = new Medicine("Crocin", 1.2, 3.4);
-    Prescription prescription = new Prescription();
-    prescription.addMedicine(med);
-    session.addPrescription(prescription);
+    
+    static void viewReports(String patientName) {
+        try (MongoClient mongoClient = new MongoClient("localhost", 27017)) {
+            MongoDatabase database = mongoClient.getDatabase("mongodbjava");
+            MongoCollection<Document> sessionsCollection = database.getCollection("diagnosis_sessions");
 
-    Mongodb db = new Mongodb();
-    MongoCollection<Document> collection = db.getCollection("sessions");
-    Document doc = new Document();
-
-    doc.append("doctor_name", doctor.getName())
-       .append("patient_name", patient.getName())
-       .append("timestamp", session.timestamp);
-
-    ArrayList<Document> prescriptionDocs = new ArrayList<>();
-    for (Medicine medicine : prescription.medicines) {
-        Document medicineDoc = new Document();
-        medicineDoc.append("name", medicine.name)
-                   .append("dosage", medicine.dosage)
-                   .append("frequency", medicine.frequency);
-        prescriptionDocs.add(medicineDoc);
+            Bson filter = Filters.eq("patient", patientName);
+            FindIterable<Document> sessions = sessionsCollection.find(filter);
+            System.out.println("Reports for " + patientName + ":");
+            for (Document session : sessions) {
+                String sessionId = session.getString("sessionId");
+                String doctor = session.getString("doctor");
+                String symptoms = session.getString("symptoms");
+                String diagnosis = session.getString("diagnosis");
+                String prescriptions = session.getString("prescriptions");
+                String notes = session.getString("notes");
+                System.out.printf("Session ID: %s, Doctor: %s, Symptoms: %s, Diagnosis: %s, Prescriptions: %s, Notes: %s%n",
+                        sessionId, doctor, symptoms, diagnosis, prescriptions, notes);
+            }
+        }
     }
-    doc.append("prescription", prescriptionDocs);
 
-    try {
-        collection.insertOne(doc);
-        System.out.println("Session created and stored in the database.");
+    static Choice Login() {
+        try {
+            System.out.print("Enter your email: ");
+            String email = scanner.nextLine();
+            System.out.print("Enter your password: ");
+            String password = scanner.nextLine();
+            Authentication auth = new Authentication();
+            Choice user = auth.login(email, password);
+            int userNum = user.choice;
+            if (userNum != 0) {
+                System.out.println("Login successful!");
+                // scanner.close();
+            } else {
+                System.out.println("Invalid credentials.");
+                // scanner.close();
 
-    } catch (Exception e) {
-        System.err.println("Error creating session: " + e.getMessage());
+            }
+            return user;
+        } catch (Exception e) {
+            System.out.println("An error occurred during login: " + e.getMessage());
+            return new Choice(0, "none");
+        }
     }
-}
 
+    public static Scanner getScanner() {
+        return scanner;
+    }
+
+    public static void setScanner(Scanner scanner) {
+        DPM.scanner = scanner;
+    }
 }
 
 class TimeStamp{
@@ -278,148 +322,20 @@ class TimeStamp{
     public int hour;
     public int minute;
 
-    TimeStamp(){
-        this.day=LocalDate.now().getDayOfMonth();
-        this.month=LocalDate.now().getMonthValue();
-        this.year=LocalDate.now().getYear();
-        this.hour=LocalTime.now().getHour();
-        this.minute=LocalTime.now().getMinute();
-    }
-    String getTime(){
-        return hour+":"+minute;
-    }
-    String getDate(){
-        return day+"/"+month+"/"+year;
-    }
-    String getDateTime(){
-        return getDate()+" "+getTime();
-    }
+TimeStamp(){
+    this.day=LocalDate.now().getDayOfMonth();
+    this.month=LocalDate.now().getMonthValue();
+    this.year=LocalDate.now().getYear();
+    this.hour=LocalTime.now().getHour();
+    this.minute=LocalTime.now().getMinute();
 }
-class Report {
-    protected String type;
-    protected TimeStamp time;
-    protected Hospital hospital;
-    protected Patient patient;
-    protected Doctor doctor;
-
-    Report(String type, TimeStamp time, Hospital hospital, Patient patient, Doctor doctor) {
-        this.type = type;
-        this.time = time;
-        this.hospital = hospital;
-        this.patient = patient;
-        this.doctor = doctor;
-    }
+String getTime(){
+    return hour+":"+minute;
 }
-
-class BloodTest extends Report {
-    String bloodGroup;
-    float hb; // Hemoglobin
-    float rbc; // Red Blood Cell count
-    float wbc; // White Blood Cell count
-    float plateletCount;
-    float hemoglobin;
-    float glucose;
-    float totalCholesterol;
-
-    BloodTest(String type, TimeStamp time, Hospital hospital, Patient patient, Doctor doctor,
-              String bloodGroup, float hb, float rbc, float wbc, float plateletCount,
-              float hemoglobin, float glucose, float totalCholesterol) {
-        super(type, time, hospital, patient, doctor);
-        this.bloodGroup = bloodGroup;
-        this.hb = hb;
-        this.rbc = rbc;
-        this.wbc = wbc;
-        this.plateletCount = plateletCount;
-        this.hemoglobin = hemoglobin;
-        this.glucose = glucose;
-        this.totalCholesterol = totalCholesterol;
-    }
-
-    void display() {
-        
-        // Implement display logic for BloodTest report
-    }
+String getDate(){
+    return day+"/"+month+"/"+year;
 }
-
-class UrineTest extends Report {
-    String color;
-    String ph;
-    String bacteria;
-    String protein;
-
-    UrineTest(String type, TimeStamp time, Hospital hospital, Patient patient, Doctor doctor,
-              String color, String ph, String bacteria, String protein) {
-        super(type, time, hospital, patient, doctor);
-        this.color = color;
-        this.ph = ph;
-        this.bacteria = bacteria;
-        this.protein = protein;
-    }
-
-    void display() {
-        // Implement display logic for UrineTest report
-    }
+String getDateTime(){
+    return getDate()+" "+getTime();
 }
-
-class GeneralTest extends Report {
-    float pulse;
-    float bloodPressure;
-    float temperature;
-    float respiration;
-    String other;
-
-    GeneralTest(String type, TimeStamp time, Hospital hospital, Patient patient, Doctor doctor,
-                float pulse, float bloodPressure, float temperature, float respiration, String other) {
-        super(type, time, hospital, patient, doctor);
-        this.pulse = pulse;
-        this.bloodPressure = bloodPressure;
-        this.temperature = temperature;
-        this.respiration = respiration;
-        this.other = other;
-    }
-
-    void display() {
-        // Implement display logic for GeneralTest report
-    }
 }
-
-class DentalReport extends Report {
-    String missingTeeth;
-    String decayedTeeth;
-    String rootIssues;
-
-    DentalReport(String type, TimeStamp time, Hospital hospital, Patient patient, Doctor doctor,
-                 String missingTeeth, String decayedTeeth, String rootIssues) {
-        super(type, time, hospital, patient, doctor);
-        this.missingTeeth = missingTeeth;
-        this.decayedTeeth = decayedTeeth;
-        this.rootIssues = rootIssues;
-    }
-
-    void display() {
-        // Implement display logic for DentalReport
-        
-    }
-}
-
-class OpticalReport extends Report {
-    String colorVision;
-    String lightEyePower;
-    String lightEyeCondition;
-
-    OpticalReport(String type, TimeStamp time, Hospital hospital, Patient patient, Doctor doctor,
-                  String colorVision, String lightEyePower, String lightEyeCondition) {
-        super(type, time, hospital, patient, doctor);
-        this.colorVision = colorVision;
-        this.lightEyePower = lightEyePower;
-        this.lightEyeCondition = lightEyeCondition;
-    }
-
-    void display() {
-        // Implement display logic for OpticalReport
-    }
-}
-
-
-// Assuming Hospital, Patient, and Doctor classes are already defined
-

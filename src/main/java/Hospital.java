@@ -1,5 +1,6 @@
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
@@ -35,16 +36,19 @@ public class Hospital {
         try (MongoClient mongoClient = new MongoClient("localhost", 27017)) {
             MongoDatabase database = mongoClient.getDatabase("mongodbjava");
             MongoCollection<Document> hospitalsCollection = database.getCollection("hospitals");
-
+            
             Document doc = hospitalsCollection.find(Filters.eq("name", name)).first();
             if (doc != null) {
                 String address = doc.getString("address");
                 Hospital hospital = new Hospital(name, address);
                 return hospital;
+            }else {
+                System.out.println("There is no hospital found with the name: " + name);
             }
+        } catch(MongoException e){
+            System.out.println("Error getting hospital from database: " + e.getMessage());
         }
         return null;
-
     }
 
     public void AddHospital() {
@@ -56,4 +60,5 @@ public class Hospital {
             hospitalsCollection.insertOne(hospitalDoc);
         }
     }
+
 }

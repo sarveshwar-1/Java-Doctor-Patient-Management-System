@@ -22,7 +22,6 @@ class Choice{
         this.choice = choice;
         this.user = user;
     }
-
 }
     public class DPM {
         private static final Logger MONGO_LOGGER = Logger.getLogger("org.mongodb.driver");
@@ -31,9 +30,6 @@ class Choice{
         }
 
         public static Scanner scanner = new Scanner(System.in);
-
-        
-        
         public static void main(String[] args) {
             ensureAdminExists(); 
             Choice ch = Login();
@@ -105,7 +101,8 @@ class Choice{
                 System.out.println("2. Create a session for diagnosis");
                 System.out.println("3. View patient");
                 System.out.println("4. Add report");
-                System.out.println("5. Exit");
+                System.out.println("5. view Appointment requests");
+                System.out.println("6. Exit");
                 int choice = scanner.nextInt();
                 scanner.nextLine(); // Consume newline
                 switch (choice) {
@@ -132,14 +129,11 @@ class Choice{
                         int weight = scanner.nextInt();
                         Patient patient = new Patient(name, email, password, phone, address, dob, bloodGroup, height, weight);
                         doctor.AddPatient(patient);
-                        
                         System.out.println("Patient added successfully.");
                         break;
                     case 2:
-                        // Create session functionality
                         System.out.println("Enter patient name for diagnosis session:");
                         String patientName = scanner.nextLine();
-                        // Fetch the patient from the database using patientName
                         Patient sessionPatient = Patient.getPatientByName(patientName); 
                         Doctor.CreateSession(doctor,sessionPatient);
                         System.out.println("Session created successfully.");
@@ -156,7 +150,18 @@ class Choice{
                         Patient reportPatient = Patient.getPatientByName(patientNameReport); 
                         doctor.AddReports(reportPatient);
                     case 5:
-                        // Exit
+                        System.out.println("Appointment requests:");
+                        doctor.schedule.printAppointmentRequests();
+                        System.out.println("Enter appointment ID to confirm/cancel:");
+                        String appointmentId = scanner.nextLine();
+                        System.out.println("1. Confirm, 2. Cancel");
+                        int option = scanner.nextInt();
+                        if (option == 1)
+                            doctor.schedule.confirmAppointmentRequest(appointmentId);
+                        else if (option == 2)
+                            doctor.schedule.cancelAppointmentRequest(appointmentId);
+                        break;
+                    case 6:
                         return;
                     default:
                         System.out.println("Invalid choice. Try again.");
@@ -164,9 +169,11 @@ class Choice{
             }
         } else if (User_ch == 2) { // Patient
             while (true) {
+                Patient patient = Patient.getPatientByEmail(user);
                 System.out.println("1. View doctors");
                 System.out.println("2. View reports for each session");
-                System.out.println("3. Exit");
+                System.out.println("3. Give appointment request");
+                System.out.println("4. Exit");
                 int choice = scanner.nextInt();
                 scanner.nextLine(); // Consume newline
                 switch (choice) {
@@ -184,7 +191,24 @@ class Choice{
                         // Fetch and display reports from the database
                         break;
                     case 3:
-                        // Exit
+                        // Give appointment request functionality
+                        System.out.println("Enter doctor name for appointment request:");
+                        String doctorName = scanner.nextLine();
+                        System.out.println("Enter date for appointment request (dd/MM/yyyy):");
+                        String date = scanner.nextLine();
+                        System.out.println("Enter time for appointment request (hh:mm):");
+                        String time = scanner.nextLine();
+                        String patient_name = patient.name;
+                        Appointment appointment = new Appointment(patient_name, doctorName, date, time);
+                        appointment.createAppointment();
+                        String id = appointment.getId();
+                        Doctor doctor = Doctor.getDoctorByName(doctorName);
+                        doctor.schedule.addAppointmentRequest(id);
+                        doctor.schedule.printAppointmentRequests();
+                        System.out.println("Appointment request sent successfully.");
+                        break;
+                    case 4:
+
                         return;
                     default:
                         System.out.println("Invalid choice. Try again.");
@@ -257,8 +281,11 @@ class Choice{
                 String email = doc.getString("email");
                 String specialization = doc.getString("specialization");
                 System.out.printf("Name: %s, Email: %s, Specialization: %s%n", name, email, specialization);
+            }}
+            catch(Exception e){
+                System.out.println("Error viewing doctors: " + e.getMessage());
             }
-        }
+        
     }
     
     static void viewReports(String patientName) {

@@ -48,10 +48,6 @@ class DiagnosisSession {
             sessionsCollection.insertOne(sessionDoc);
         }
     }
-
-
-
-    // Getters and setters for session fields
     public String getSessionId() {
         return sessionId;
     }
@@ -59,22 +55,6 @@ class DiagnosisSession {
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
     }
-
-    // public Doctor getDoctor() {
-    //     return doctor;
-    // }
-
-    // public void setDoctor(Doctor doctor) {
-    //     this.doctor = doctor;
-    // }
-
-    // public Patient getPatient() {
-    //     return patient;
-    // }
-
-    // public void setPatient(Patient patient) {
-    //     this.patient = patient;
-    // }
 
     public String getSymptoms() {
         return symptoms;

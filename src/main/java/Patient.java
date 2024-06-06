@@ -53,7 +53,31 @@ public class Patient extends User {
         }
     }
 
-    
+    public static Patient getPatientByEmail(String email){
+        try (MongoClient mongoClient = new MongoClient("localhost", 27017)){
+            MongoDatabase database = mongoClient.getDatabase("mongodbjava");
+            MongoCollection<Document> patientsCollection = database.getCollection("patients");
+            Document myDoc = patientsCollection.find(Filters.eq("email", email)).first();
+            if (myDoc != null){
+                String name = myDoc.getString("name");
+                String password = myDoc.getString("password");
+                String phone = myDoc.getString("phone");
+                String address = myDoc.getString("address");
+                String dob = myDoc.getString("dob");
+                String bloodGroup = myDoc.getString("bloodGroup");
+                int height = myDoc.getInteger("height");
+                int weight = myDoc.getInteger("weight");
+                Patient patient = new Patient(name, email, password, phone, address, dob, bloodGroup, height, weight);
+                return patient;
+            }
+            return null;
+
+        } catch (Exception e) {
+            System.out.println("Error reading patient: " + e.getMessage());
+            return null;
+        }
+
+    }
 
     public void viewPatient() {
         // Display patient details

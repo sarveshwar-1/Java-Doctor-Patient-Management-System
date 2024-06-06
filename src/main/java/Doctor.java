@@ -1,19 +1,22 @@
 
+import java.util.ArrayList;
+import java.util.Scanner;
+
+import org.bson.Document;
+
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 
-import java.util.ArrayList;
-import java.util.Scanner;
-import org.bson.Document;
-
 public class Doctor extends User {
     private ArrayList<String> patients;
     private Hospital hospital;
     private String specialization;
+    public Schedule schedule;
 
-    public Doctor(String name, String email, String password, String phone, String address, String dob, Hospital hospital, String specialization) {
+    public Doctor(String name, String email, String password, String phone, String address, String dob,
+            Hospital hospital, String specialization) {
         this.name = name;
         this.email = email;
         this.password = password;
@@ -23,7 +26,8 @@ public class Doctor extends User {
         this.hospital = hospital;
         this.specialization = specialization;
         this.patients = new ArrayList<>();
-        
+        this.schedule = new Schedule(this.email);
+        schedule.saveAppointment();
     }
 
     public void AddDoctor() {
@@ -46,6 +50,32 @@ public class Doctor extends User {
         this.patients.add(patient.name);
         patient.doctors.add(this.name);
         patient.AddPatient();
+    }
+
+    public static Doctor getDoctorByName(String name) {
+        try (MongoClient mongoClient = new MongoClient("localhost", 27017)) {
+            MongoDatabase database = mongoClient.getDatabase("mongodbjava");
+            MongoCollection<Document> doctorsCollection = database.getCollection("doctors");
+
+            Document doc = doctorsCollection.find(Filters.eq("name", name)).first();
+            if (doc != null) {
+                String email = doc.getString("email");
+                String password = doc.getString("password");
+                String phone = doc.getString("phone");
+                String address = doc.getString("address");
+                String dob = doc.getString("dob");
+                String hospitalName = doc.getString("hospital");
+                String specialization = doc.getString("specialization");
+                Hospital hospital = Hospital.getHospitalByName(hospitalName); // Assuming a method to get the hospital
+                                                                              // details
+                Doctor doctor = new Doctor(name, email, password, phone, address, dob, hospital, specialization);
+                return doctor;
+            }
+            return null;
+        } catch (Exception e) {
+            System.out.println("Error in getting doctor by email: " + e.getMessage());
+            return null;
+        }
     }
 
     public static void CreateSession(Doctor doctor, Patient patient) {
@@ -88,29 +118,26 @@ public class Doctor extends User {
                 String dob = doc.getString("dob");
                 String hospitalName = doc.getString("hospital");
                 String specialization = doc.getString("specialization");
-                Hospital hospital = Hospital.getHospitalByName(hospitalName); // Assuming a method to get the hospital details
+                Hospital hospital = Hospital.getHospitalByName(hospitalName); // Assuming a method to get the hospital
+                                                                              // details
                 Doctor doctor = new Doctor(name, email, password, phone, address, dob, hospital, specialization);
                 return doctor;
             }
         }
         return null;
     }
-    private void viewPatients() {
-        // Display patient details
-        System.out.println("Patients:");
-        for (String patient : patients) {
-            System.out.println(patient);
-        }
-    }
+
     public void AddReports(Patient patient) {
-        try(MongoClient mongoClient = new MongoClient("localhost", 27017)){
+        try (MongoClient mongoClient = new MongoClient("localhost", 27017)) {
             MongoDatabase database = mongoClient.getDatabase("mongodbjava");
             MongoCollection<Document> patientsCollection = database.getCollection("patients");
-            Document update = new Document("$push", new Document("reports", patient.reports));
+
             Scanner scanner = DPM.getScanner();
-            System.out.println("Enter the type of report (BloodTest, UrineTest, GeneralTest, DentalReport, OpticalReport):");
+            System.out.println(
+                    "Enter the type of report (BloodTest, UrineTest, GeneralTest, DentalReport, OpticalReport):");
             String type = scanner.nextLine();
             TimeStamp time = new TimeStamp();
+            String timeStr = time.getDateTime();
             Hospital hospital = this.hospital;
             Doctor doctor = this;
             switch (type) {
@@ -131,8 +158,24 @@ public class Doctor extends User {
                     float glucose = scanner.nextFloat();
                     System.out.println("Enter the Total Cholesterol:");
                     float totalCholesterol = scanner.nextFloat();
-                    BloodTest bloodTest = new BloodTest(type, time, hospital, patient, doctor, bloodGroup, hb, rbc, wbc, plateletCount, hemoglobin, glucose, totalCholesterol);
+
+                    Document bloodTestDoc = new Document("type", type)
+                            .append("time", timeStr)
+                            .append("hospital", hospital.getName())
+                            .append("patient", patient.getName())
+                            .append("doctor", doctor.getName())
+                            .append("bloodGroup", bloodGroup)
+                            .append("hb", hb)
+                            .append("rbc", rbc)
+                            .append("wbc", wbc)
+                            .append("plateletCount", plateletCount)
+                            .append("hemoglobin", hemoglobin)
+                            .append("glucose", glucose)
+                            .append("totalCholesterol", totalCholesterol);
+                    BloodTest bloodTest = new BloodTest(type, time, hospital, patient, doctor, bloodGroup, hb, rbc, wbc,
+                            plateletCount, hemoglobin, glucose, totalCholesterol);
                     patient.reports.add(bloodTest);
+                    Document update = new Document("$push", new Document("reports", bloodTestDoc));
                     patientsCollection.updateOne(Filters.eq("email", patient.getEmail()), update);
                     bloodTest.display();
                     break;
@@ -145,8 +188,23 @@ public class Doctor extends User {
                     String bacteria = scanner.nextLine();
                     System.out.println("Enter the protein:");
                     String protein = scanner.nextLine();
-                    UrineTest urineTest = new UrineTest(type, time, hospital, patient, doctor, color, ph, bacteria, protein);
+                    UrineTest urineTest = new UrineTest(type, time, hospital, patient, doctor, color, ph, bacteria,
+                            protein);
+                    patient.reports.add(urineTest);
+                    Document urineTestDoc = new Document("type", type)
+                            .append("time", timeStr)
+                            .append("hospital", hospital.getName())
+                            .append("patient", patient.getName())
+                            .append("doctor", doctor.getName())
+                            .append("color", color)
+                            .append("ph", ph)
+                            .append("bacteria", bacteria)
+                            .append("protein", protein);
+                    Document updateUrine = new Document("$push", new Document("reports", urineTestDoc));
+                    patientsCollection.updateOne(Filters.eq("email", patient.getEmail()), updateUrine);
+
                     urineTest.display();
+
                     break;
                 case "GeneralTest":
                     System.out.println("Enter the pulse:");
@@ -159,7 +217,21 @@ public class Doctor extends User {
                     float respiration = scanner.nextFloat();
                     System.out.println("Enter any other details:");
                     String other = scanner.nextLine();
-                    GeneralTest generalTest = new GeneralTest(type, time, hospital, patient, doctor, pulse, bloodPressure, temperature, respiration, other);
+                    GeneralTest generalTest = new GeneralTest(type, time, hospital, patient, doctor, pulse,
+                            bloodPressure, temperature, respiration, other);
+                    patient.reports.add(generalTest);
+                    Document generalTestDoc = new Document("type", type)
+                            .append("time", timeStr)
+                            .append("hospital", hospital.getName())
+                            .append("patient", patient.getName())
+                            .append("doctor", doctor.getName())
+                            .append("pulse", pulse)
+                            .append("bloodPressure", bloodPressure)
+                            .append("temperature", temperature)
+                            .append("respiration", respiration)
+                            .append("other", other);
+                    Document updateGeneral = new Document("$push", new Document("reports", generalTestDoc));
+                    patientsCollection.updateOne(Filters.eq("email", patient.getEmail()), updateGeneral);
                     generalTest.display();
                     break;
                 case "DentalReport":
@@ -169,8 +241,21 @@ public class Doctor extends User {
                     String decayedTeeth = scanner.nextLine();
                     System.out.println("Enter the root issues:");
                     String rootIssues = scanner.nextLine();
-                    DentalReport dentalReport = new DentalReport(type, time, hospital, patient, doctor, missingTeeth, decayedTeeth, rootIssues);
+                    DentalReport dentalReport = new DentalReport(type, time, hospital, patient, doctor, missingTeeth,
+                            decayedTeeth, rootIssues);
+                    patient.reports.add(dentalReport);
+                    Document dentalReportDoc = new Document("type", type)
+                            .append("time", timeStr)
+                            .append("hospital", hospital.getName())
+                            .append("patient", patient.getName())
+                            .append("doctor", doctor.getName())
+                            .append("missingTeeth", missingTeeth)
+                            .append("decayedTeeth", decayedTeeth)
+                            .append("rootIssues", rootIssues);
+                    Document updateDental = new Document("$push", new Document("reports", dentalReportDoc));
+                    patientsCollection.updateOne(Filters.eq("email", patient.getEmail()), updateDental);
                     dentalReport.display();
+
                     break;
                 case "OpticalReport":
                     System.out.println("Enter the color vision:");
@@ -179,23 +264,29 @@ public class Doctor extends User {
                     String lightEyePower = scanner.nextLine();
                     System.out.println("Enter the light eye condition:");
                     String lightEyeCondition = scanner.nextLine();
-                    OpticalReport opticalReport = new OpticalReport(type, time, hospital, patient, doctor, colorVision, lightEyePower, lightEyeCondition);
+                    OpticalReport opticalReport = new OpticalReport(type, time, hospital, patient, doctor, colorVision,
+                            lightEyePower, lightEyeCondition);
+                    patient.reports.add(opticalReport);
+                    Document opticalReportDoc = new Document("type", type)
+                            .append("time", timeStr)
+                            .append("hospital", hospital.getName())
+                            .append("patient", patient.getName())
+                            .append("doctor", doctor.getName())
+                            .append("colorVision", colorVision)
+                            .append("lightEyePower", lightEyePower)
+                            .append("lightEyeCondition", lightEyeCondition);
+                    Document updateOptical = new Document("$push", new Document("reports", opticalReportDoc));
+                    patientsCollection.updateOne(Filters.eq("email", patient.getEmail()), updateOptical);
                     opticalReport.display();
                     break;
                 default:
                     System.out.println("Invalid report type.");
-                }
+            }
 
-            
-            
+        } catch (Exception e) {
+            System.out.println("Error in adding reports: " + e.getMessage());
         }
-    catch(Exception e){
-        System.out.println("Error in adding reports: "+e.getMessage());
     }
-    }
-
-
-
 
     // Additional getters and setters for doctor-specific fields
     public Hospital getHospital() {
@@ -214,4 +305,3 @@ public class Doctor extends User {
         this.specialization = specialization;
     }
 }
-

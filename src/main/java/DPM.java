@@ -94,7 +94,7 @@ class Choice{
     static void Activities(Choice ch) {
         int User_ch = ch.choice;
         String user = ch.user;
-        if (User_ch == 1) { // Doctor
+        if (User_ch == 1) { 
             while (true) {
                 Doctor doctor = Doctor.getDoctorByEmail(user);
                 System.out.println("1. Add patient");
@@ -104,7 +104,7 @@ class Choice{
                 System.out.println("5. view Appointment requests");
                 System.out.println("6. Exit");
                 int choice = scanner.nextInt();
-                scanner.nextLine(); // Consume newline
+                scanner.nextLine();
                 switch (choice) {
                     case 1:
                         System.out.println("Enter patient details:");
@@ -151,15 +151,16 @@ class Choice{
                         doctor.AddReports(reportPatient);
                     case 5:
                         System.out.println("Appointment requests:");
-                        doctor.schedule.printAppointmentRequests();
+                        Schedule schedule = Schedule.getScheduleByDoctorName(doctor.name);
+                        schedule.printAppointmentRequests();
                         System.out.println("Enter appointment ID to confirm/cancel:");
                         String appointmentId = scanner.nextLine();
                         System.out.println("1. Confirm, 2. Cancel");
                         int option = scanner.nextInt();
                         if (option == 1)
-                            doctor.schedule.confirmAppointmentRequest(appointmentId);
+                            schedule.confirmAppointmentRequest(appointmentId);
                         else if (option == 2)
-                            doctor.schedule.cancelAppointmentRequest(appointmentId);
+                            schedule.cancelAppointmentRequest(appointmentId);
                         break;
                     case 6:
                         return;
@@ -178,20 +179,16 @@ class Choice{
                 scanner.nextLine(); // Consume newline
                 switch (choice) {
                     case 1:
-                        // View doctors functionality
                         System.out.println("Doctors list:");
                         viewDoctors();
                         
                         break;
                     case 2:
-                        // View reports functionality
                         System.out.println("Enter your name to view reports:");
                         String patientName = scanner.nextLine();
                         viewReports(patientName);
-                        // Fetch and display reports from the database
                         break;
                     case 3:
-                        // Give appointment request functionality
                         System.out.println("Enter doctor name for appointment request:");
                         String doctorName = scanner.nextLine();
                         System.out.println("Enter date for appointment request (dd/MM/yyyy):");
@@ -202,13 +199,12 @@ class Choice{
                         Appointment appointment = new Appointment(patient_name, doctorName, date, time);
                         appointment.createAppointment();
                         String id = appointment.getId();
-                        Doctor doctor = Doctor.getDoctorByName(doctorName);
-                        doctor.schedule.addAppointmentRequest(id);
-                        doctor.schedule.printAppointmentRequests();
+                        Schedule schedule = Schedule.getScheduleByDoctorName(doctorName);
+                        schedule.addAppointmentRequest(id);
+                        schedule.printAppointmentRequests();
                         System.out.println("Appointment request sent successfully.");
                         break;
                     case 4:
-
                         return;
                     default:
                         System.out.println("Invalid choice. Try again.");

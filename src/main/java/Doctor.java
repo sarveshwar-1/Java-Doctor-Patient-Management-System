@@ -15,6 +15,7 @@ public class Doctor extends User {
     private String specialization;
     public Schedule schedule;
 
+
     public Doctor(String name, String email, String password, String phone, String address, String dob,
             Hospital hospital, String specialization) {
         this.name = name;
@@ -26,11 +27,12 @@ public class Doctor extends User {
         this.hospital = hospital;
         this.specialization = specialization;
         this.patients = new ArrayList<>();
-        this.schedule = new Schedule(this.email);
-        schedule.saveAppointment();
+        
     }
 
     public void AddDoctor() {
+        this.schedule = new Schedule(this.name);
+        this.schedule.saveAppointment();
         try (MongoClient mongoClient = new MongoClient("localhost", 27017)) {
             MongoDatabase database = mongoClient.getDatabase("mongodbjava");
             MongoCollection<Document> doctorsCollection = database.getCollection("doctors");
@@ -41,7 +43,8 @@ public class Doctor extends User {
                     .append("address", this.address)
                     .append("dob", this.dob)
                     .append("hospital", this.hospital.getName())
-                    .append("specialization", this.specialization);
+                    .append("specialization", this.specialization)
+                    .append("Schedule", this.schedule.getId());
             doctorsCollection.insertOne(doctorDoc);
         }
     }
@@ -66,8 +69,8 @@ public class Doctor extends User {
                 String dob = doc.getString("dob");
                 String hospitalName = doc.getString("hospital");
                 String specialization = doc.getString("specialization");
-                Hospital hospital = Hospital.getHospitalByName(hospitalName); // Assuming a method to get the hospital
-                                                                              // details
+                Hospital hospital = Hospital.getHospitalByName(hospitalName);
+                String scheduleId = doc.getString("Schedule");
                 Doctor doctor = new Doctor(name, email, password, phone, address, dob, hospital, specialization);
                 return doctor;
             }

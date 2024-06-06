@@ -24,12 +24,17 @@ public class Appointment {
         this.isConfirmed = false;
     }
 
-    public Document getAppointmentbyid(String id){
+    public static Appointment getAppointmentbyid(String id){
         try (MongoClient mongoClient = new MongoClient("localhost", 27017)){
             MongoDatabase database = mongoClient.getDatabase("mongodbjava");
             MongoCollection<Document> appointmentsCollection = database.getCollection("appointments");
-            Document myDoc = appointmentsCollection.find(Filters.eq("_id", id)).first();
-            return myDoc;
+            Document myDoc = appointmentsCollection.find(Filters.eq("id", id)).first();
+            String app_id = myDoc.getString("id");
+            Appointment ap = new Appointment(myDoc.getString("patientId"), myDoc.getString("doctorId"), myDoc.getString("date"), myDoc.getString("time"));
+            ap.id = app_id;
+            return ap;
+            
+
         } catch (Exception e) {
             System.out.println("Error reading appointment: " + e.getMessage());
             return null;
